@@ -1,0 +1,7 @@
+---
+- name: Startup configuration
+  import_playbook: startup.yaml
+- name: Create a KubeEdge cluster
+  import_playbook: kubeedge-setup.yaml
+- name: Post-Install configuration
+  import_playbook: post-install.yaml

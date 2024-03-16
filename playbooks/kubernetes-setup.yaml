@@ -1,0 +1,102 @@
+---
+- name: Install Kubernetes on hosts
+  hosts: all
+  tasks:
+    - name: Prepare Hosts
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: prepare_hosts
+
+    - name: Install Kubernetes CLIs
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_kube_utilities
+
+    - name: Install containerd
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_containerd
+
+- name: Create control plane nodes
+  hosts: control_plane
+  tasks:
+    - name: Install Kubernetes on the initial control plane node
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: install_control_plane
+
+    - name: Get token to join the initial control plane node
+      register: printed_join_command
+      ansible.builtin.command:
+        cmd: kubeadm token create --print-join-command
+      when: inventory_hostname == groups['control_plane'][0]
+
+- name: Create and join worker nodes
+  hosts: worker
+  tasks:
+    - name: Join workers nodes to the cluster
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: join_nodes_to_cluster
+      vars:
+        kubernetes_command: "{{ hostvars[groups['control_plane'][0]]['printed_join_command'].stdout }}"
+
+    - name: Wait until the node is connected to the cluster
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: is_node_connected
+      vars:
+        utils_control_plane_init_node: "{{ hostvars[groups['control_plane'][0]]['kube_node_name'] }}"
+        utils_kube_node_name: "{{ kube_node_name }}"
+
+    - name: Label worker nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: data_plane
+
+- name: Create and join infra nodes
+  hosts: infra
+  tasks:
+    - name: Join infra nodes to the cluster
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: join_nodes_to_cluster
+      vars:
+        kubernetes_command: "{{ hostvars[groups['control_plane'][0]]['printed_join_command'].stdout }}"
+
+    - name: Wait until the node is connected to the cluster
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: is_node_connected
+      vars:
+        utils_control_plane_init_node: "{{ hostvars[groups['control_plane'][0]]['kube_node_name'] }}"
+        utils_kube_node_name: "{{ kube_node_name }}"
+
+    - name: Label infra nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: infrastructure
+
+- name: Label cloud nodes
+  hosts: cloud
+  tasks:
+    - name: Label cloud nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: cloud_nodes
+
+- name: Label edge nodes
+  hosts: edge
+  tasks:
+    - name: Label edge nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: edge_nodes
+
+- name: Install Kubernetes Metrics Server
+  hosts: control_plane
+  tasks:
+    - name: Install Kubernetes Metrics Server
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_metrics_server

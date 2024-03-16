@@ -1,0 +1,138 @@
+# E2E workflow, which is testing the project end-to-end.
+
+name: E2E
+
+on:
+  push:
+    branches: [ "master" ]
+
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ vars.HOST_DEPENDENCIES_IMAGE_REPO }}:latest
+    
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        k8s-distribution: [microk8s, k3s, kubernetes, kubeedge]
+        index: [1]
+        var-file: ["terraform.tfvars"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Terraform Init
+        id: init
+        run: |
+          terraform                               \
+            -chdir=terraform                      \
+            init
+
+      - name: Export private SSH key
+        env:
+          DO_PRIVATE_SSH_KEY_CI: ${{ secrets.DO_PRIVATE_SSH_KEY_CI }}
+        run: |
+          touch DO_PRIVATE_SSH_KEY_CI
+          chmod 600 DO_PRIVATE_SSH_KEY_CI # permissions must not be too open
+          echo "$DO_PRIVATE_SSH_KEY_CI" > DO_PRIVATE_SSH_KEY_CI
+
+      - name: Terraform apply
+        id: apply
+        env:
+          DO_TOKEN: ${{ secrets.DO_TOKEN }}
+        run: |
+          terraform                               \
+            -chdir=terraform                      \
+            apply                                 \
+            -auto-approve                         \
+            -var do_token=${DO_TOKEN}             \
+            -var "pvt_key=$(readlink -f DO_PRIVATE_SSH_KEY_CI)"  \
+            -var "run_name=${{ matrix.k8s-distribution }}"       \
+            -var="firewall={\"enabled\"=true,\"allowed_ip\":\"$(curl https://ipinfo.io/ip)\"}" \
+            -var-file=${{ matrix.var-file }}
+
+      - name: Run Playbook
+        run: |
+          ANSIBLE_COLLECTIONS_PATH=/collections/ ansible-playbook playbooks/${{ matrix.k8s-distribution }}.yaml
+
+      - name: Copy kubeconfig to the default directory
+        run: |
+          cp playbooks/kubeconfig ~/.kube/config
+
+      - name: Create pull secret
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN_READ: ${{ secrets.DOCKERHUB_TOKEN_READ }}
+        run: |
+          kubectl create secret docker-registry docker-cfg --docker-username=${DOCKERHUB_USERNAME} --docker-password=${DOCKERHUB_TOKEN_READ}
+
+      - name: Compile the kubectl plugin
+        run: |
+          cd cloud-edge
+          go build -buildvcs=false
+          cd -
+
+      - name: Apply resources using the plugin
+        run: |
+          ./cloud-edge/cloud-edge apply -d demo-app/ -n default --create-namespace --kubeconfig playbooks/kubeconfig
+
+      - name: Wait for e2e to finish
+        id: e2e-wait
+        run: |
+          kubectl wait --for=condition=complete --timeout=1200s job/e2e
+
+      - name: Monitor resources using the plugin
+        run: |
+          ./cloud-edge/cloud-edge top -n "" --kubeconfig playbooks/kubeconfig
+
+      - name: Wait to gather metrics for a reasonable period of time
+        run: |
+          sleep 10m
+
+      - name: Gather Prometheus metrics for the standard topology
+        if: always() && (steps.e2e-wait.outcome == 'success' || steps.e2e-wait.outcome == 'failure')
+        # always() is needed as otherwise the default status check of success() is applied
+        env:
+          DB_USER: ${{ secrets.DB_METRICS_USER }}
+          DB_PASSWORD: ${{ secrets.DB_METRICS_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_METRICS_PORT }}
+          DB_HOST: ${{ secrets.DB_METRICS_HOST }}
+          DB_DATABASE: ${{ vars.DB_METRICS_DATABASE }}
+        run: |
+          if [ "${{ matrix.var-file }}" = "terraform.tfvars" ]; then \
+          ./utils/fetch_export_metrics.sh ${{ matrix.k8s-distribution }}; else \
+          echo "Skipping exporting metrics"; fi
+
+      - name: Gather cluster info
+        if: always() && (steps.e2e-wait.outcome == 'success' || steps.e2e-wait.outcome == 'failure')
+        # always() is needed as otherwise the default status check of success() is applied
+        run: |
+          mkdir cluster-info-dump
+          kubectl cluster-info dump --all-namespaces --output-directory=cluster-info-dump/
+
+      - name: Upload cluster-info
+        if: always() && (steps.e2e-wait.outcome == 'success' || steps.e2e-wait.outcome == 'failure')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cluster-info-${{ matrix.k8s-distribution }}-${{ matrix.var-file }}-${{ matrix.index }}
+          path: cluster-info-dump
+          retention-days: 5
+
+      - name: Terraform destroy
+        if: always()
+        id: destroy
+        env:
+          DO_TOKEN: ${{ secrets.DO_TOKEN }}
+        run: |
+          terraform                               \
+            -chdir=terraform                      \
+            apply                                 \
+            -auto-approve                         \
+            -destroy                              \
+            -var do_token=${DO_TOKEN}             \
+            -var "pvt_key=$(readlink -f DO_PRIVATE_SSH_KEY_CI)"  \
+            -var "run_name=${{ matrix.k8s-distribution }}"

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-ui
+  name: kafka-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+    spec:
+      containers:
+      - image: provectuslabs/kafka-ui
+        imagePullPolicy: Always
+        name: kafka-ui
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: DYNAMIC_CONFIG_ENABLED
+          value: "true"
+        - name: KAFKA_CLUSTERS_0_NAME
+          value: "edge"
+        - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+          value: "kafka-edge:9092"
+        - name: KAFKA_CLUSTERS_1_NAME
+          value: "cloud"
+        - name: KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS
+          value: "kafka-cloud:9092"
+      nodeSelector:
+        node-role.kubernetes.io/cloud: ""

@@ -1,0 +1,14 @@
+# Package managers should install software in a controlled, safe manner.
+# https://ansible.readthedocs.io/projects/lint/rules/package-latest/#package-latest
+#
+# The site.yaml file is provided for a quick overall upgrade of all system packages.
+# However, this may break the machines as the latest packages are not tested and tracked
+# against the project. Thus, ignore the rule for the file.
+playbooks/site.yaml package-latest
+
+# The use of run_once does not provide a warranty that a task runs once.
+# https://ansible.readthedocs.io/projects/lint/rules/run-once/
+#
+# The `free` strategy, which relates to the rule, is not supported.
+playbooks/microk8s-setup.yaml run-once[task]
+playbooks/kubeedge-setup.yaml run-once[task]

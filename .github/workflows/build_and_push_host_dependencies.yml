@@ -1,0 +1,23 @@
+name: Build and push the 'host-dependencies' image
+
+on:
+  push:
+    paths:
+      - "utils/host_dependencies/*"
+      - "requirements.yaml"
+
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and Push host-dependencies Image
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN_READ_WRITE: ${{ secrets.DOCKERHUB_TOKEN_READ_WRITE }}
+          IMAGE_REPOSITORY: ${{ vars.HOST_DEPENDENCIES_IMAGE_REPO }}
+        run: |
+          docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_TOKEN_READ_WRITE}
+          bash utils/host_dependencies/build_and_push.sh ${IMAGE_REPOSITORY}

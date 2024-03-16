@@ -1,0 +1,5 @@
+---
+- name: Join nodes to the cluster
+  ansible.builtin.command:
+    cmd: "{{ kubernetes_command }}"
+    creates: /etc/kubernetes/kubelet.conf

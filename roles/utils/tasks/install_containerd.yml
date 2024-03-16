@@ -1,0 +1,26 @@
+---
+- name: Install containerd
+  # https://github.com/containerd/containerd/blob/2c042ae0de7b9d69df8df8e370e2d802f10f9ee5/docs/getting-started.md
+  ansible.builtin.shell: |
+    wget https://github.com/containerd/containerd/releases/download/v1.7.24/containerd-1.7.24-linux-amd64.tar.gz
+    tar Cxzvf /usr/local containerd-1.7.24-linux-amd64.tar.gz
+    wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+    mkdir -p /usr/local/lib/systemd/system/
+    cp containerd.service /usr/local/lib/systemd/system/containerd.service
+    systemctl daemon-reload
+    systemctl enable --now containerd
+
+- name: Install runc
+  # https://github.com/containerd/containerd/blob/2c042ae0de7b9d69df8df8e370e2d802f10f9ee5/docs/getting-started.md
+  ansible.builtin.shell: |
+    wget https://github.com/opencontainers/runc/releases/download/v1.2.2/runc.amd64
+    install -m 755 runc.amd64 /usr/local/sbin/runc
+
+- name: Configure containerd
+  # https://v1-29.docs.kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
+  # TODO: Use `dasel` instead of `sed`
+  ansible.builtin.shell: |
+    mkdir -p /etc/containerd/
+    containerd config default > /etc/containerd/config.toml
+    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+    systemctl restart containerd

@@ -1,0 +1,8 @@
+---
+- name: Install reference CNI plugins
+  # https://github.com/containerd/containerd/blob/2c042ae0de7b9d69df8df8e370e2d802f10f9ee5/docs/getting-started.md
+  ansible.builtin.shell: |
+    wget https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz
+    mkdir -p /opt/cni/bin
+    tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.6.2.tgz
+    mkdir -p /etc/cni/net.d/

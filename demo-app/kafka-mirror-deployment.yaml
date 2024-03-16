@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-mirror
+  name: kafka-mirror
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-mirror
+  template:
+    metadata:
+      labels:
+        app: kafka-mirror
+    spec:
+      containers:
+      - image: docker.io/bitnami/kafka:3.6
+        name: kafka-mirror
+        command: ["/opt/bitnami/kafka/bin/connect-mirror-maker.sh"]
+        args: ["/config/mm2.properties"]
+        volumeMounts:
+        - name: configuration
+          mountPath: "/config"
+          readOnly: true
+      volumes:
+      - name: configuration
+        configMap:
+          name: kafka-mirror-configuration
+          items:
+          - key: "mm2.properties"
+            path: "mm2.properties"
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""

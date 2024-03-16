@@ -1,0 +1,9 @@
+---
+- name: Install Prometheus
+  hosts: infra
+  gather_facts: false
+  tasks:
+    - name: Install Prometheus
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_prometheus

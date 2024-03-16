@@ -1,0 +1,14 @@
+---
+- name: Label worker nodes
+  # --k3s-extra-args '--node-label node-role.kubernetes.io/worker=worker' cannot be used
+  # see: https://github.com/kubernetes-sigs/kind/issues/2724#issuecomment-1102680869
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - label
+      - nodes
+      - "{{ kube_node_name }}"
+      - node-role.kubernetes.io/worker=
+      - --kubeconfig
+      - kubeconfig

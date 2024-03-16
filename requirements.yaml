@@ -1,0 +1,8 @@
+---
+collections:
+  - name: cloud.terraform
+    version: 3.0.0
+  - name: kubernetes.core
+    version: 5.0.0
+  - name: community.general
+    version: 10.5.0

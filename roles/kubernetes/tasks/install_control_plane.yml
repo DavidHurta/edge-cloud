@@ -1,0 +1,30 @@
+---
+- name: Create the init node
+  register: add_node_output
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - init
+      - --pod-network-cidr
+      - 10.244.0.0/16
+    creates: /etc/kubernetes/manifests/kube-apiserver.yaml
+  when: inventory_hostname == groups['control_plane'][0]
+
+- name: Get token to join the initial control plane node
+  ansible.builtin.include_role:
+    name: utils
+    tasks_from: install_flannel_cni
+  vars:
+    utils_kubeconfig_path: "/etc/kubernetes/admin.conf"
+  when: inventory_hostname == groups['control_plane'][0]
+
+- name: Copy the admin kubeconfig to the local machine
+  ansible.builtin.fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: ./
+    flat: true
+
+- name: Rename the local admin kubeconfig
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: mv admin.conf kubeconfig

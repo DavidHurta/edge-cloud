@@ -1,0 +1,8 @@
+---
+- name: Wait until all hosts are reachable
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait until all hosts are reachable (timeout 300 seconds)
+      ansible.builtin.wait_for_connection:
+        timeout: 300

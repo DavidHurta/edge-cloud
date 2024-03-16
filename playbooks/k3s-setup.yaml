@@ -1,0 +1,55 @@
+---
+- name: Create control plane nodes
+  hosts: control_plane
+  tasks:
+    - name: Install K3s on the initial control plane node
+      ansible.builtin.include_role:
+        name: k3s
+        tasks_from: install_control_plane
+
+    - name: Taint Kubernetes master nodes as node-role.kubernetes.io/control-plane:NoSchedule
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: control_plane
+
+- name: Create and join worker nodes
+  hosts: worker
+  tasks:
+    - name: Install K3s on worker nodes
+      ansible.builtin.include_role:
+        name: k3s
+        tasks_from: install_data_plane
+
+    - name: Label worker nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: data_plane
+
+- name: Create and join infra nodes
+  hosts: infra
+  tasks:
+    - name: Install K3s on infra nodes
+      ansible.builtin.include_role:
+        name: k3s
+        tasks_from: install_infrastructure
+
+    - name: Label infra nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: infrastructure
+
+- name: Label cloud nodes
+  hosts: cloud
+  tasks:
+    - name: Label cloud nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: cloud_nodes
+
+- name: Label edge nodes
+  hosts: edge
+  tasks:
+    - name: Label edge nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: edge_nodes

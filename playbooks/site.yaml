@@ -1,0 +1,14 @@
+---
+- name: Upgrade, Reboot, and Wait
+
+  hosts: all
+  tasks:
+    - name: Upgrade the system packages to the latest version
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: true
+
+    - name: Reboot and wait for the host to be available
+      ansible.builtin.reboot:
+        reboot_timeout: 3600

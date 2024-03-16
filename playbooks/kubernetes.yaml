@@ -1,0 +1,7 @@
+---
+- name: Startup configuration
+  import_playbook: startup.yaml
+- name: Create a Kubernetes cluster
+  import_playbook: kubernetes-setup.yaml
+- name: Post-Install configuration
+  import_playbook: post-install.yaml

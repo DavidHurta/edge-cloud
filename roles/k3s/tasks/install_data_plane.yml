@@ -1,0 +1,17 @@
+---
+- name: Install K3s on worker nodes
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - k3sup
+      - join
+      - --ip
+      - "{{ inventory_hostname }}"
+      - --server-ip
+      - "{{ api_endpoint }}"
+      - --ssh-key
+      - "{{ ansible_ssh_private_key_file }}"
+      - --k3s-version
+      - v1.29.12+k3s1
+      - --k3s-extra-args
+      - "--node-ip {{ ipv4_address_private }} --node-external-ip {{ ipv4_address }}"

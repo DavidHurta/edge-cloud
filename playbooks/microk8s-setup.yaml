@@ -1,0 +1,243 @@
+---
+- name: Install MicroK8s on hosts
+  hosts: all
+  tasks:
+
+    - name: Install snapd
+      community.general.snap:
+        name:
+          - snapd
+        channel: latest/stable
+        state: "present"
+      retries: 10
+      delay: 5
+
+    - name: Install MicroK8s
+      community.general.snap:
+        name:
+          - microk8s
+        classic: true
+        channel: 1.29/stable
+        state: "present"
+      retries: 10
+      delay: 5
+
+    - name: Wait for nodes to start
+      ansible.builtin.command:
+        cmd: microk8s status --wait-ready
+      changed_when: false
+
+    - name: Switch to using the Flannel CNI plugin
+      ansible.builtin.command:
+      # flannel is used when the ha-cluster add-on is disabled
+      # ref: https://microk8s.io/docs/change-cidr
+        cmd: microk8s disable ha-cluster --force
+
+    - name: Wait for nodes to start
+      ansible.builtin.command:
+        cmd: microk8s status --wait-ready
+      changed_when: false
+
+    - name: Read the /var/snap/microk8s/current/certs/csr.conf.template file
+      ansible.builtin.command:
+        cmd: cat /var/snap/microk8s/current/certs/csr.conf.template
+      register: csr_conf_template_content
+      changed_when: false
+
+    - name: Add SAN of the load balancer
+      # inspired by: https://github.com/balchua/do-microk8s/blob/a323e27f6f8f294ddc40c7de188242317f488775/templates/add-node.sh
+      ansible.builtin.command:
+        cmd: sed -i 's@#MOREIPS@IP.99 = {{ api_endpoint }}\n#MOREIPS\n@g' /var/snap/microk8s/current/certs/csr.conf.template
+      when: csr_conf_template_content.stdout.find('IP.99') == -1 and groups['control_plane'] | length > 1
+
+    - name: Wait for SAN changes to propagate
+      # `microk8s status --wait-ready` is not sufficient as it will cause an error while services are restarting
+      # due to the CSR configuration template file update.
+      ansible.builtin.command:
+        cmd: sleep 10
+      when: csr_conf_template_content.stdout.find('IP.99') == -1 and groups['control_plane'] | length > 1
+
+- name: Create control plane nodes
+  hosts: control_plane
+  tasks:
+    - name: Get token to join the initial control plane node
+      register: add_node_output
+      ansible.builtin.command:
+        argv:
+          - microk8s
+          - add-node
+          - --token-ttl
+          - 3600
+          - --format
+          - json
+      when: inventory_hostname == groups['control_plane'][0]
+
+    - name: Check if node is already joined
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          microk8s kubectl get nodes | grep "{{ hostvars[groups['control_plane'][0]]['kube_node_name'] }}"
+      failed_when: is_joined.rc > 2
+      register: is_joined
+      changed_when: false
+
+    - name: Join MicroK8s control nodes to the initial node (HA setup)
+      ansible.builtin.command:
+        argv:
+          - microk8s
+          - join
+          - "{{ hostvars[groups['control_plane'][0]]['add_node_output'].stdout | from_json | json_query('urls[0]') }}"
+      when: inventory_hostname != groups['control_plane'][0] and is_joined.stdout == ""
+
+    - name: Get kubeconfig content
+      run_once: true
+      register: kubeconfig
+      ansible.builtin.command:
+        argv:
+          - microk8s
+          - config
+      when: inventory_hostname == groups['control_plane'][0]
+      changed_when: false
+
+    - name: Save kubeconfig to local file
+      run_once: true
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ hostvars[groups['control_plane'][0]]['kubeconfig'].stdout }}"
+        dest: "kubeconfig"
+        mode: "0600"
+
+    - name: Replace server line in kubeconfig
+      run_once: true
+      delegate_to: localhost
+      ansible.builtin.replace:
+        path: kubeconfig
+        regexp: "server: .*$"
+        replace: "server: https://{{ api_endpoint }}:16443"
+
+    - name: Wait for nodes to join the cluster
+      ansible.builtin.command: microk8s kubectl get nodes
+      register: result
+      retries: 10
+      until: hostvars[groups['control_plane'][0]]['kube_node_name'] | string in result.stdout and kube_node_name in result.stdout
+      delay: 10
+      changed_when: false
+
+    - name: Label Kubernetes master nodes as master
+      delegate_to: localhost
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - label
+          - nodes
+          - "{{ kube_node_name }}"
+          - node-role.kubernetes.io/control-plane=
+          - --kubeconfig
+          - kubeconfig
+
+    - name: Taint Kubernetes master nodes as node-role.kubernetes.io/control-plane:NoSchedule
+      delegate_to: localhost
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - taint
+          - node
+          - "{{ kube_node_name }}"
+          - node-role.kubernetes.io/control-plane:NoSchedule
+          - --overwrite
+          - --kubeconfig
+          - kubeconfig
+
+- name: Create and join worker nodes
+  hosts: worker
+  tasks:
+    - name: Join workers nodes to the cluster
+      register: add_node_output
+      ansible.builtin.command:
+        argv:
+          - microk8s
+          - join
+          - --worker
+          - "{{ hostvars[groups['control_plane'][0]]['add_node_output'].stdout | from_json | json_query('urls[0]') }}"
+      # The retries were not necessarily when using Calico CNI. The migration to Flannel
+      # has resulted in a failed join for the first attempted node due to an invalid token,
+      # which works for the remaining nodes. As such, the troubleshooting requires deeper
+      # investigation. Retrying using the same token results in a successful join.
+      # TODO: Investigate the failures in more depth.
+      retries: 10
+      delay: 5
+
+    - name: Wait for worker nodes to join the cluster
+      delegate_to: localhost
+      ansible.builtin.command:
+        cmd: kubectl get nodes --kubeconfig kubeconfig
+      register: result
+      retries: 30
+      until: hostvars[groups['control_plane'][0]]['kube_node_name'] | string in result.stdout and kube_node_name in result.stdout
+      delay: 10
+      changed_when: false
+
+    - name: Label worker nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: data_plane
+
+- name: Create and join infra nodes
+  hosts: infra
+  tasks:
+    - name: Join infra nodes to the cluster
+      register: add_node_output
+      ansible.builtin.command:
+        argv:
+          - microk8s
+          - join
+          - --worker
+          - "{{ hostvars[groups['control_plane'][0]]['add_node_output'].stdout | from_json | json_query('urls[0]') }}"
+      # For explanation, see `microk8s join` for worker nodes
+      retries: 10
+      delay: 5
+
+    - name: Wait for infra nodes to join the cluster
+      delegate_to: localhost
+      ansible.builtin.command:
+        cmd: kubectl get nodes --kubeconfig kubeconfig
+      register: result
+      retries: 30
+      until: hostvars[groups['control_plane'][0]]['kube_node_name'] | string in result.stdout and kube_node_name in result.stdout
+      delay: 10
+      changed_when: false
+
+    - name: Label infra nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: infrastructure
+
+- name: Label cloud nodes
+  hosts: cloud
+  tasks:
+    - name: Label cloud nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: cloud_nodes
+
+- name: Label edge nodes
+  hosts: edge
+  tasks:
+    - name: Label edge nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: edge_nodes
+
+- name: Enable add-ons
+  hosts: control_plane
+
+  tasks:
+    - name: Enable dns add-on
+      ansible.builtin.command:
+        cmd: microk8s enable dns
+      run_once: true
+
+    - name: Enable metrics-server add-on
+      ansible.builtin.command:
+        cmd: microk8s enable metrics-server
+      run_once: true

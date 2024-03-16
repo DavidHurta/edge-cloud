@@ -1,0 +1,20 @@
+---
+- name: Add Kubernetes Metrics Server helm repository
+  delegate_to: localhost
+  run_once: true
+  kubernetes.core.helm_repository:
+    name: metrics-server
+    repo_url: "https://kubernetes-sigs.github.io/metrics-server/"
+    kubeconfig: "{{ playbook_dir }}/kubeconfig"
+
+- name: Deploy Kubernetes Metrics Server helm chart
+  delegate_to: localhost
+  run_once: true
+  kubernetes.core.helm:
+    name: metrics-server
+    chart_ref: metrics-server/metrics-server
+    chart_version: 3.12.2
+    release_namespace: metrics-server
+    create_namespace: true
+    values_files: "{{ role_path }}/files/metrics-server-helm-values.yaml"
+    kubeconfig: "{{ playbook_dir }}/kubeconfig"

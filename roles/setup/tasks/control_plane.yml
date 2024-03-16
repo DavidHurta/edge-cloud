@@ -1,0 +1,13 @@
+---
+- name: Taint Kubernetes master nodes as node-role.kubernetes.io/control-plane:NoSchedule
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - taint
+      - node
+      - "{{ kube_node_name }}"
+      - node-role.kubernetes.io/control-plane:NoSchedule
+      - --overwrite
+      - --kubeconfig
+      - kubeconfig

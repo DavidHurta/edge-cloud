@@ -1,0 +1,35 @@
+name: Check Go syntax and compilation
+
+on:
+  push:
+    paths:
+      - "cloud-edge/*"
+
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run `go fmt`
+        working-directory: ./cloud-edge
+        id: fmt
+        run: go fmt
+      
+      - name: Check for changes
+        working-directory: ./cloud-edge
+        run: git diff --exit-code
+
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build
+        id: fmt
+        working-directory: ./cloud-edge
+        run: go build

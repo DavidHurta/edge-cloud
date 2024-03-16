@@ -1,0 +1,12 @@
+---
+- name: Check whether a node is connected to the cluster
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: kubectl get nodes --kubeconfig kubeconfig
+  register: result
+  retries: 30
+  # Check whether the initial control plane node and the current node are part of the
+  # same cluster.
+  until: utils_control_plane_init_node | string in result.stdout and utils_kube_node_name in result.stdout
+  delay: 10
+  changed_when: false

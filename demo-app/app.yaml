@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-app-sensor
+  name: demo-app-sensor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-app-sensor
+  template:
+    metadata:
+      labels:
+        app: demo-app-sensor
+    spec:
+      containers:
+      - name: app-sensor
+        image: davoska/edge-cloud:latest
+        args: ["--servers", "kafka-edge:9092", "--sleep", "100", "--count", "-1", "--mode", "EdgeDevice"]
+      imagePullSecrets:
+      - name: docker-cfg
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-app-sensor
+  name: demo-app-edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app-sensor
+  template:
+    metadata:
+      labels:
+        app: demo-app-sensor
+    spec:
+      containers:
+      - name: app-edge
+        image: davoska/edge-cloud:latest
+        args: ["--servers", "kafka-edge:9092", "--mode", "EdgeServer",  "--aggregationWindow", "5"]
+      imagePullSecrets:
+      - name: docker-cfg
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-app-sensor
+  name: demo-app-cloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app-sensor
+  template:
+    metadata:
+      labels:
+        app: demo-app-sensor
+    spec:
+      containers:
+      - name: app-cloud
+        image: davoska/edge-cloud:latest
+        args: ["--servers", "kafka-cloud:9092", "--mode", "CloudServer", "--aggregationWindow", "20"]
+      imagePullSecrets:
+      - name: docker-cfg
+      nodeSelector:
+        node-role.kubernetes.io/cloud: ""

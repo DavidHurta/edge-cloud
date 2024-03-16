@@ -1,0 +1,12 @@
+---
+- name: Label cloud nodes
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - label
+      - nodes
+      - "{{ kube_node_name }}"
+      - node-role.kubernetes.io/cloud=
+      - --kubeconfig
+      - kubeconfig

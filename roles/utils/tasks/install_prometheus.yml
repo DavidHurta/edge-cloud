@@ -1,0 +1,20 @@
+---
+- name: Add prometheus-community helm repository
+  delegate_to: localhost
+  run_once: true
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: "https://prometheus-community.github.io/helm-charts"
+    kubeconfig: "{{ playbook_dir }}/kubeconfig"
+
+- name: Deploy Prometheus helm chart
+  delegate_to: localhost
+  run_once: true
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/prometheus
+    chart_version: 27.3.0
+    release_namespace: prometheus
+    create_namespace: true
+    values_files: "{{ role_path }}/files/prometheus-helm-values.yaml"
+    kubeconfig: "{{ playbook_dir }}/kubeconfig"

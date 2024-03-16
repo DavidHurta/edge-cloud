@@ -1,0 +1,76 @@
+---
+# Instructions based on the Kubernetes documentation
+# https://v1-29.docs.kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl
+
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+    update_cache: true
+  # Retries required as a workaround for `Could not get lock /var/lib/dpkg/lock-frontend` failures
+  # See https://github.com/ansible/ansible/issues/51663
+  retries: 10
+  delay: 5
+
+- name: Create `/etc/apt/keyrings` directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add kubernetes-apt-keyring.gpg
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    executable: /bin/bash
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add external package repository
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    executable: /bin/bash
+    creates: /etc/apt/sources.list.d/kubernetes.list
+
+- name: Install kubelet, kubeadm, kubectl
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    update_cache: true
+  # Retries required as a workaround for `Could not get lock /var/lib/dpkg/lock-frontend` failures
+  # See https://github.com/ansible/ansible/issues/51663
+  retries: 10
+  delay: 5
+
+# ansible.builtin.apt module does not support `apt-mark`
+# use ansible.builtin.dpkg_selections instead
+# ref: https://stackoverflow.com/a/63983134
+- name: Hold kubelet
+  ansible.builtin.dpkg_selections:
+    name: kubelet
+    selection: hold
+  retries: 10
+  delay: 5
+
+- name: Hold kubeadm
+  ansible.builtin.dpkg_selections:
+    name: kubeadm
+    selection: hold
+  retries: 10
+  delay: 5
+
+- name: Hold kubectl
+  ansible.builtin.dpkg_selections:
+    name: kubectl
+    selection: hold
+  retries: 10
+  delay: 5

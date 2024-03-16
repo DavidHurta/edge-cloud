@@ -1,0 +1,12 @@
+---
+- name: Label edge nodes
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - label
+      - nodes
+      - "{{ kube_node_name }}"
+      - node-role.kubernetes.io/edge=
+      - --kubeconfig
+      - kubeconfig

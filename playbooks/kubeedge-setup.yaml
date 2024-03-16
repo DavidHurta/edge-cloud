@@ -1,0 +1,263 @@
+---
+- name: Create control plane nodes
+  hosts:
+    - control_plane
+    - infra
+    - cloud
+  tasks:
+    - name: Prepare Hosts
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: prepare_hosts
+
+    - name: Install Kubernetes CLIs
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_kube_utilities
+
+    - name: Install containerd
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_containerd
+
+- name: Create control plane nodes
+  hosts: control_plane
+  tasks:
+    - name: Install Kubernetes on the initial control plane node
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: install_control_plane
+
+    - name: Get token to join the initial control plane node
+      register: printed_join_command
+      ansible.builtin.command:
+        cmd: kubeadm token create --print-join-command
+      when: inventory_hostname == groups['control_plane'][0]
+
+    - name: Check if CloudCore is installed
+      delegate_to: localhost
+      register: is_helm_installed
+      ansible.builtin.shell: |
+        helm status -n kubeedge cloudcore --kubeconfig kubeconfig
+      changed_when: false
+      failed_when: is_helm_installed.rc not in [0, 1]
+      when: inventory_hostname == groups['control_plane'][0]
+
+    - name: Instal CloudCore
+      delegate_to: localhost
+      # Cannot use `nodeSelector` due to a potential keadm issue.
+      # The command converts string "true" to a boolean `true`. This results in an error.
+      ansible.builtin.command: |
+        keadm init \
+          --advertise-address="{{ ipv4_address }}"    \
+          --kubeedge-version=v1.19.1                  \
+          --kube-config=kubeconfig                    \
+          --set cloudCore.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key="node-role.kubernetes.io/control-plane" \
+          --set cloudCore.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator="In" \
+          --set cloudCore.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]="true" \
+          --set cloudCore.tolerations[0].key="node-role\\.kubernetes\\.io/control-plane"  \
+          --set cloudCore.tolerations[0].operator="Exists"                                \
+          --set cloudCore.tolerations[0].effect="NoSchedule"                              \
+          --set cloudCore.tolerations[1].key="node-role\\.kubernetes\\.io/master"         \
+          --set cloudCore.tolerations[1].operator="Exists"                                \
+          --set cloudCore.tolerations[1].effect="NoSchedule"                              \
+          --set cloudCore.modules.dynamicController.enable=true                           # needed to enable EdgeMesh
+      when: inventory_hostname == groups['control_plane'][0] and hostvars[groups['control_plane'][0]]['is_helm_installed'].rc != 0
+
+    - name: Get token to join the initial control plane node
+      delegate_to: localhost
+      register: keadm_gettoken
+      # CloudCore must be ready
+      retries: 10
+      delay: 10
+      until: keadm_gettoken.rc == 0
+      ansible.builtin.command: |
+        keadm gettoken --kube-config=kubeconfig
+      when: inventory_hostname == groups['control_plane'][0]
+
+- name: Create and join infra nodes
+  hosts: infra
+  tasks:
+    - name: Join workers nodes to the cluster
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: join_nodes_to_cluster
+      vars:
+        kubernetes_command: "{{ hostvars[groups['control_plane'][0]]['printed_join_command'].stdout }}"
+
+    - name: Wait until the node is connected to the cluster
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: is_node_connected
+      vars:
+        utils_control_plane_init_node: "{{ hostvars[groups['control_plane'][0]]['kube_node_name'] }}"
+        utils_kube_node_name: "{{ kube_node_name }}"
+
+    - name: Label infra nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: infrastructure
+
+- name: Create cloud nodes
+  hosts: cloud
+  tasks:
+    - name: Join workers nodes to the cluster
+      ansible.builtin.include_role:
+        name: kubernetes
+        tasks_from: join_nodes_to_cluster
+      vars:
+        kubernetes_command: "{{ hostvars[groups['control_plane'][0]]['printed_join_command'].stdout }}"
+
+    - name: Wait until the node is connected to the cluster
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: is_node_connected
+      vars:
+        utils_control_plane_init_node: "{{ hostvars[groups['control_plane'][0]]['kube_node_name'] }}"
+        utils_kube_node_name: "{{ kube_node_name }}"
+
+    - name: Label worker nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: data_plane
+
+    - name: Label cloud nodes
+      ansible.builtin.include_role:
+        name: setup
+        tasks_from: cloud_nodes
+
+- name: Create edge nodes
+  hosts: edge
+  tasks:
+    - name: Install containerd
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_containerd
+
+    - name: Install reference cni plugins
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_reference_cni_plugins
+
+    - name: Configure cni plugins
+      ansible.builtin.include_role:
+        name: kubeedge
+        tasks_from: configure_cni
+
+    - name: Restart containerd service
+      ansible.builtin.systemd:
+        state: restarted
+        name: containerd.service
+
+    # keadm installation
+    # Commands used per https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm
+    - name: Download compressed keadm
+      ansible.builtin.get_url:
+        url: https://github.com/kubeedge/kubeedge/releases/download/v1.19.1/keadm-v1.19.1-linux-amd64.tar.gz
+        dest: /tmp/keadm-v1.19.1-linux-amd64.tar.gz
+        mode: "0700"
+
+    - name: Create temporary directory to unarchive the downloaded file
+      ansible.builtin.file:
+        path: /tmp/keadm
+        state: directory
+        mode: "0700"
+
+    - name: Unarchive the file
+      ansible.builtin.unarchive:
+        src: /tmp/keadm-v1.19.1-linux-amd64.tar.gz
+        dest: /tmp/
+        remote_src: true
+
+    - name: Copy the keadm tool to be easily accessible on the machine
+      ansible.builtin.copy:
+        src: /tmp/keadm-v1.19.1-linux-amd64/keadm/keadm
+        dest: /usr/local/bin/keadm
+        remote_src: true
+        mode: preserve
+
+    - name: Install EdgeCore and join the cluster
+      # https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm
+      ansible.builtin.shell: |
+        keadm join \
+        --cloudcore-ipport="{{ hostvars[groups['control_plane'][0]]['ipv4_address'] }}:10000" \
+        --token="{{ hostvars[groups['control_plane'][0]]['keadm_gettoken'].stdout }}"         \
+        --kubeedge-version=v1.19.1                                                            \
+        --remote-runtime-endpoint=unix:///run/containerd/containerd.sock                      \
+        --cgroupdriver=systemd
+      args:
+        creates: /etc/kubeedge/
+
+    - name: Install yq
+      ansible.builtin.apt:
+        name: yq
+        state: present
+        update_cache: true
+      retries: 10
+      delay: 5
+
+    - name: Add filter labels to Kubernetes API services
+      # https://edgemesh.netlify.app/guide/#prerequisites
+      delegate_to: localhost
+      ansible.builtin.command: |
+        kubectl label services kubernetes service.edgemesh.kubeedge.io/service-proxy-name="" --kubeconfig kubeconfig
+      run_once: true
+
+    - name: Configure EdgeCore to enable `kubectl logs`, DNS, and EdgeMesh
+      # https://release-1-19.docs.kubeedge.io/docs/setup/install-with-keadm#enable-kubectl-logs-feature
+      # https://edgemesh.netlify.app/guide/edge-kube-api.html#quick-start
+      ansible.builtin.shell: |
+        yq -iy '.modules.edgeStream.enable = true' /etc/kubeedge/config/edgecore.yaml
+        yq -iy '.modules.edgeMesh.enable = false' /etc/kubeedge/config/edgecore.yaml
+        yq -iy '.modules.metaManager.metaServer.enable = true' /etc/kubeedge/config/edgecore.yaml
+        yq -iy '.modules.edged.tailoredKubeletConfig.clusterDNS[0] = "169.254.96.16"' /etc/kubeedge/config/edgecore.yaml
+
+    - name: Restart containerd service
+      ansible.builtin.systemd:
+        state: restarted
+        name: containerd.service
+
+    - name: Restart edgecore service
+      ansible.builtin.systemd:
+        state: restarted
+        name: edgecore.service
+
+    - name: Generate PSK
+      # https://edgemesh.netlify.app/guide/security.html#generate-psk-cipher
+      delegate_to: localhost
+      register: generated_psk
+      ansible.builtin.command:
+        cmd: openssl rand -base64 32
+      run_once: true
+
+    - name: Deploy EdgeMesh using helm
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.shell: |
+        helm install edgemesh                                                                 \
+        --kubeconfig kubeconfig                                                               \
+        --create-namespace --namespace kubeedge                                               \
+        --set agent.psk="{{generated_psk.stdout}}"                                            \
+        --set agent.relayNodes[0].nodeName="{{hostvars[groups['control_plane'][0]]['kube_node_name']}}"          \
+        --set agent.relayNodes[0].advertiseAddress={"{{hostvars[groups['control_plane'][0]]['ipv4_address']}}"}  \
+        --set agent.modules.edgeDNS.enable="true"                                             \
+        --set agent.modules.edgeDNS.cacheDNS.enable="true"                                    \
+        --set agent.tolerations[0].key="node-role\\.kubernetes\\.io/control-plane"            \
+        --set agent.tolerations[0].operator="Exists"                                          \
+        --set agent.tolerations[0].effect="NoSchedule"                                        \
+        --set agent.tolerations[1].key="node-role\\.kubernetes\\.io/master"                   \
+        --set agent.tolerations[1].operator="Exists"                                          \
+        --set agent.tolerations[1].effect="NoSchedule"                                        \
+        --set agent.tolerations[2].key="node-role\\.kubernetes\\.io/infra"                    \
+        --set agent.tolerations[2].operator="Exists"                                          \
+        --set agent.tolerations[2].effect="NoSchedule"                                        \
+        --set agent.image=kubeedge/edgemesh-agent:v1.17.0                                     \
+        https://raw.githubusercontent.com/kubeedge/edgemesh/main/build/helm/edgemesh.tgz
+
+- name: Install Kubernetes Metrics Server
+  hosts: control_plane
+  tasks:
+    - name: Install Kubernetes Metrics Server
+      ansible.builtin.include_role:
+        name: utils
+        tasks_from: install_metrics_server

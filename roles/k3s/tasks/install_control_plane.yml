@@ -1,0 +1,55 @@
+---
+- name: Install K3s on the initial control plane node
+  delegate_to: localhost
+  ansible.builtin.command:
+  # "--no-extras" to disable servicelb and traefik
+    argv:
+      - k3sup
+      - install
+      - --cluster
+      - --ip
+      - "{{ inventory_hostname }}"
+      - --ssh-key
+      - "{{ ansible_ssh_private_key_file }}"
+      - --tls-san
+      - "{{ api_endpoint }}"
+      - --k3s-version
+      - v1.29.12+k3s1
+      - --k3s-extra-args
+      - "--node-ip {{ ipv4_address_private }} --node-external-ip {{ ipv4_address }}"
+      - "--no-extras"
+  when: inventory_hostname == ansible_play_hosts[0]
+
+- name: Install K3s on the additional control plane nodes (HA setup with embedded etcd)
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - k3sup
+      - join
+      - --server
+      - --ip
+      - "{{ inventory_hostname }}"
+      - --ssh-key
+      - "{{ ansible_ssh_private_key_file }}"
+      - --server-ip
+      - "{{ ansible_play_hosts[0] }}"
+      - --tls-san
+      - "{{ api_endpoint }}"
+      - --k3s-version
+      - v1.29.12+k3s1
+      - --k3s-extra-args
+      - "--node-ip {{ ipv4_address_private }} --node-external-ip {{ ipv4_address }}"
+  when: inventory_hostname != ansible_play_hosts[0]
+
+- name: Update kubeconfig to use the loadbalancer IP if set
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - k3sup
+      - install
+      - --skip-install
+      - --ip
+      - "{{ api_endpoint }}"
+      - --ssh-key
+      - "{{ ansible_ssh_private_key_file }}"
