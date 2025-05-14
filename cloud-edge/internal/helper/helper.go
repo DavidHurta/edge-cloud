@@ -1,3 +1,9 @@
+//
+// Helper package intended for various helper functions.
+//
+// Author: David Hurta
+//
+
 package helper
 
 import (

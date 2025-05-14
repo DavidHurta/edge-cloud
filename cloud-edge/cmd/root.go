@@ -1,3 +1,9 @@
+//
+// The root command of the cobra command.
+//
+// Author: David Hurta
+//
+
 package cmd
 
 import (

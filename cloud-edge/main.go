@@ -1,3 +1,9 @@
+//
+// Entry point for the application.
+//
+// Author: David Hurta
+//
+
 package main
 
 import (

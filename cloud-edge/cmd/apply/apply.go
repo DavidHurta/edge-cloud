@@ -1,3 +1,9 @@
+//
+// The apply subcommand of the cobra command.
+//
+// Author: David Hurta
+//
+
 package apply
 
 import (

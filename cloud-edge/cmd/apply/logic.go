@@ -1,3 +1,9 @@
+//
+// The internal logic for the top subcommand of the cobra command.
+//
+// Author: David Hurta
+//
+
 package apply
 
 import (

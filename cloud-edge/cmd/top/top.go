@@ -1,3 +1,9 @@
+//
+// The top subcommand of the cobra command.
+//
+// Author: David Hurta
+//
+
 package top
 
 import (
