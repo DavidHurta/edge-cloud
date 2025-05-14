@@ -1,3 +1,9 @@
+#
+# A python application to generate reports of metrics that are gathered in a MySQL database.
+#
+# Author: David Hurta
+#
+
 """
 Module providing tooling to generate reports of metrics
 that are gathered in a running MySQL database.
