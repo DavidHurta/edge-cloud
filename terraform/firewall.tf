@@ -1,3 +1,10 @@
+#
+# Firewall definition.
+#
+# Author: David Hurta
+#
+
+
 resource "digitalocean_firewall" "cluster" {
   name  = local.clusters[count.index].id
   count = var.firewall.enabled == true ? length(local.clusters) : 0

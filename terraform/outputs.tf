@@ -1,3 +1,9 @@
+#
+# Defined Terraform output.
+#
+# Author: David Hurta
+#
+
 output "nodes" {
   value = {
     for instance in digitalocean_droplet.node :

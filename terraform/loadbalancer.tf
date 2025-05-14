@@ -1,3 +1,9 @@
+#
+# Load balancer definition.
+#
+# Author: David Hurta
+#
+
 locals {
   # By evaluating whether a load-balancer is needed from input data, Terraform is able to 
   # determine the decision at plan stage. Using `control_plane_nodes` results in

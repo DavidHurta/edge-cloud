@@ -1,3 +1,9 @@
+#
+# Terraform resources for nodes.
+#
+# Author: David Hurta
+#
+
 locals {
   nodes = flatten([
     for cluster in var.clusters :

@@ -1,3 +1,9 @@
+#
+# Terraform variables file.
+#
+# Author: David Hurta
+#
+
 variable "do_token" {
   sensitive = true
 }

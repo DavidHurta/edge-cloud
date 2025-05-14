@@ -1,3 +1,9 @@
+#
+# A large cluster topology.
+#
+# Author: David Hurta
+#
+
 clusters = [
   {
     name = "cluster"

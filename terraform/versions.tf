@@ -1,3 +1,9 @@
+#
+# Required Terraform providers and their versions.
+#
+# Author: David Hurta
+#
+
 terraform {
   required_providers {
     digitalocean = {
