@@ -1,3 +1,9 @@
+#
+# A Kubernetes manifest file for the Kafka UI service.
+#
+# Author: David Hurta
+#
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
