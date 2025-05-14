@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+#
+# A script to filter out Prometheus metrics provided in the standard input
+# and insert them into a MySQL database in a defined format.
+#
+# Author: David Hurta
+#
+
 set -e 
 set -o pipefail
 

@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+#
+# A script to collect aggregated performance cluster metrics using a Prometheus server
+# in a Kubernetes cluster by deploying Kubernetes jobs to fetch the server within the 
+# cluster. Subsequently, the script exports the filtered metrics to a MySQL database.
+# 
+#
+# Author: David Hurta
+#
+
 set -e 
 set -o pipefail
 

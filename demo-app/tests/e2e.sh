@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+
+#
+# A script to verify that the kafka broker in the cloud contains the necessary number of
+# cloud-server-01 messages. This verifies the overall microservice application.
+#
+# Author: David Hurta
+#
+
 set -x
 cd /opt/bitnami/kafka/bin/ || exit
 for i in $(seq 1 10);
