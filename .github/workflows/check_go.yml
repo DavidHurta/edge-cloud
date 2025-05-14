@@ -1,3 +1,9 @@
+#
+# A workflow to check the format of Go source files and their compilation.
+#
+# Author: David Hurta
+#
+
 name: Check Go syntax and compilation
 
 on:

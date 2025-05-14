@@ -1,3 +1,9 @@
+#
+# A workflow to check and validate Terraform files.
+#
+# Author: David Hurta
+#
+
 name: Check and validate Terraform
 
 on:

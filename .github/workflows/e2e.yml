@@ -1,4 +1,8 @@
-# E2E workflow, which is testing the project end-to-end.
+#
+# A workflow to run the end-to-end testing.
+#
+# Author: David Hurta
+#
 
 name: E2E
 

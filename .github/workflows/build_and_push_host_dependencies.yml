@@ -1,3 +1,9 @@
+#
+# A workflow to build and push the 'host-dependencies' container image.
+#
+# Author: David Hurta
+#
+
 name: Build and push the 'host-dependencies' image
 
 on:
