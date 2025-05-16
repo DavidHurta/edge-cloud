@@ -1,41 +1,42 @@
-# Exploring the Cloud Edge World
+# CLI Application for Deployment and Monitoring of Services
 
-## Documentation
+A CLI application to deploy and monitor services using the Kubernetes API server.
 
-To view the full documentation, including required dependencies, click [`here`](docs/README.md).
+## Compilation
 
-## Notes
-
-- The project is being developed and tested on Ubuntu 24.04 LTS
-- Developed using Kubernetes 1.29
-- Project is intended to be used for learning, development, and testing purposes.
-
-## Quick Usage Overview
-
-To provision a default infrastructure run:
-
-```sh
-$ terraform -chdir=terraform/ apply -var do_token=${DO_PAT}
-```
-
-To configure the provisioned infrastructure to deploy a container management technology run:
-
-```sh
-# Supported technology values at the moment are: kubernetes, k3s, microk8s, kubeedge
-$ ansible-playbook playbooks/${TECHNOLOGY}.yaml
-```
-
-To auto-provision and configure a default cluster of a chosen technology, run:
-
-```sh
-$ make ${TECHNOLOGY}
-```
-
-To build the CLI application `cloud-edge` run the following command to compile the application:
+To build the application, run:
 
 ```sh
 $ make build
 ```
+
+This creates a binary file in the `bin` directory.
+
+## Usage
+
+For more information regarding the CLI command, view its help:
+
+
+```sh
+$ ./bin/cloud-edge --help
+A CLI application to deploy and monitor services in a Kubernetes cluster.
+
+Usage:
+  cloud-edge [command]
+
+Available Commands:
+  apply       Deploy applications
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  top         Monitor running applications
+
+Flags:
+  -h, --help   help for cloud-edge
+
+Use "cloud-edge [command] --help" for more information about a command.
+```
+
+### Deployment of Services
 
 An example of applying Kubernetes manifests using the subcommand `cloud-edge apply`:
 
@@ -54,6 +55,8 @@ The resource '/v1, Kind=ConfigMap' named 'kafka-mirror-configuration' was succes
 The resource 'apps/v1, Kind=Deployment' named 'kafka-mirror' was successfully applied!
 The resource 'apps/v1, Kind=Deployment' named 'kafka-ui' was successfully applied!
 ```
+
+### Monitoring of Services
 
 An example of monitoring the created application using the subcommand `cloud-edge top`:
 

@@ -1,14 +1,38 @@
-# Exploring the Cloud Edge World
-
-## Documentation
-
-To view the full documentation, including required dependencies, click [`here`](docs/README.md).
+# Project Overview
 
 ## Notes
 
-- The project is being developed and tested on Ubuntu 24.04 LTS
+- The project is being developed and tested on Ubuntu 24.04 LTS hosts
 - Developed using Kubernetes 1.29
 - Project is intended to be used for learning, development, and testing purposes.
+
+## Required Dependencies and Configuration
+
+### Required Tools
+
+- General tooling downloadable by running `apt install curl python3 python3-pip wget lsb-release jq`
+- [`terraform`](https://developer.hashicorp.com/terraform/install)
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) (1.29)
+- [`k3sup`](https://github.com/alexellis/k3sup?tab=readme-ov-file#download-k3sup-tldr)
+- [`helm`](https://helm.sh/docs/intro/install/#from-apt-debianubuntu)
+- [`pipx`](https://pipx.pypa.io/stable/installation/#on-linux)
+- [`keadm`](https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm) (1.19)
+- [`go`](https://go.dev/doc/install)
+- [`pipenv`](https://github.com/pypa/pipenv)
+- MySQL client by running `apt install default-mysql-client`
+- Ansible and its required dependencies
+  - `pipx install --include-deps ansible==11.1.0`
+  - `pipx inject ansible jmespath==1.0.1`
+  - `ansible-galaxy collection install --requirements-file requirements.yaml`
+
+> [!TIP]
+> A [Dockerfile](../utils/host_dependencies/Dockerfile) exists, which contains all the needed dependencies and the required steps!
+>
+> When using a container to execute the project, specify the Ansible collections path:
+>
+> ```sh
+> ANSIBLE_COLLECTIONS_PATH=/collections/ ansible-playbook ...
+> ```
 
 ## Quick Usage Overview
 
@@ -55,6 +79,13 @@ The resource 'apps/v1, Kind=Deployment' named 'kafka-mirror' was successfully ap
 The resource 'apps/v1, Kind=Deployment' named 'kafka-ui' was successfully applied!
 ```
 
+If needed, to create a pull secret, for example, run:
+
+```sh
+$ kubectl create secret docker-registry docker-cfg --docker-username=$USERNAME --docker-password=$PASSWORD --namespace kafka-app
+secret/docker-cfg created
+```
+
 An example of monitoring the created application using the subcommand `cloud-edge top`:
 
 ```sh
@@ -76,3 +107,11 @@ stage-cluster-control-plane-9f50ec4d   True    119m         1001Mi
 stage-cluster-edge-ecd6fad4            True    413m         3226Mi
 stage-cluster-infra-cdcb9ee0           True    37m          961Mi
 ```
+
+## Known Limitations
+
+### Third-Party Services Dependency
+
+Dependency on third-party services may result in the degradation or failure of the project's functionalities. Verify the status of a third-party service before debugging.
+
+For example, an Ansible playbook that installs `microk8s` using `snap` may seem stuck during the installation step. This may result in either a seemingly stuck installation or the cancellation of the SSH connection due to no activity. This may be a result of a very slow download of the `microk8s` from the third-party servers.

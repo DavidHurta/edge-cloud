@@ -1,8 +1,12 @@
 # Utilities
 
-### Notes
+Utilities for the overall project. See individual files for more information.
 
-Database schema used:
+## Notes
+
+### Table Schema
+
+Table schema used:
 
 ```sql
 CREATE TABLE metrics(

@@ -1,6 +1,9 @@
 # Visualizing Metrics Comparisons Across Technologies
 
-Meanwhile, a Prometheus server gathers metrics, and GitHub Actions exports a subset of metrics to a MySQL database; it is necessary to visualize the collected metrics for comparison.
+A Prometheus server gathers metrics, and GitHub Actions exports a subset of the metrics to a MySQL database.
+The goal of this application is to to generate summaries of the collected metrics for comparison using
+statistical measurements, tests, and data visualization. The generated reports are intended
+to be merged using third party tools such as [`pdfjam`](https://github.com/pdfjam/pdfjam).
 
 ## Requirements
 
