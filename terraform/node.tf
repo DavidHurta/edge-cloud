@@ -110,7 +110,7 @@ resource "ansible_host" "host" {
     []
   )
   variables = {
-    "kube_node_name"       = digitalocean_droplet.node[count.index].name # TODO: make the name more general (e.g. name)
+    "kube_node_name"       = digitalocean_droplet.node[count.index].name
     "ipv4_address"         = digitalocean_droplet.node[count.index].ipv4_address
     "ipv4_address_private" = digitalocean_droplet.node[count.index].ipv4_address_private
   }
