@@ -34,6 +34,30 @@
 > ANSIBLE_COLLECTIONS_PATH=/collections/ ansible-playbook ...
 > ```
 
+#### Used Versions in Development
+
+|Tool|Version|
+|-|-|
+|terraform|v1.11.3|
+|kubectl|v1.32.0|
+|k3sup|0.13.6|
+|helm|v3.17.2|
+|pipx|1.4.3|
+|keadm|v1.19.1|
+|go|go1.23.4|
+|pipenv|2024.4.1|
+|mysql|8.0.42-0ubuntu0.24.04.1|
+|curl|8.5.0|
+|python3|3.12.3|
+|pip|24.3.1|
+|wget|1.21.4|
+|jq|jq-1.7|
+|lsb-release|12.0-2|
+|Python Package ansible|11.1.0|
+
+> [!NOTE]
+> Other dependencies and their versions are tracked in the respective files, such as [`requirements.yaml`](../requirements.yaml), [`cloud-edge/go.mod`](../cloud-edge/go.mod), [`terraform/.terraform.lock.hcl`](../terraform/.terraform.lock.hcl), and [`metrics-comparison/Pipfile.lock`](../metrics-comparison/Pipfile.lock). These files are consumed by other tools.
+
 ## Quick Usage Overview
 
 To provision a default infrastructure run:
