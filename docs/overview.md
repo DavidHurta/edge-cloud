@@ -36,6 +36,8 @@
 
 #### Used Versions in Development
 
+Tools used in development and their respective versions.
+
 |Tool|Version|
 |-|-|
 |terraform|v1.11.3|
@@ -53,7 +55,13 @@
 |wget|1.21.4|
 |jq|jq-1.7|
 |lsb-release|12.0-2|
-|Python Package ansible|11.1.0|
+
+Tools downloaded by the `pipx` tool:
+
+|Tool|Version|
+|-|-|
+|ansible|11.1.0|
+|jmespath|1.0.1|
 
 > [!NOTE]
 > Other dependencies and their versions are tracked in the respective files, such as [`requirements.yaml`](../requirements.yaml), [`cloud-edge/go.mod`](../cloud-edge/go.mod), [`terraform/.terraform.lock.hcl`](../terraform/.terraform.lock.hcl), and [`metrics-comparison/Pipfile.lock`](../metrics-comparison/Pipfile.lock). These files are consumed by other tools.
