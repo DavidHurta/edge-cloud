@@ -30,7 +30,7 @@
     - name: Switch to using the Flannel CNI plugin
       ansible.builtin.command:
       # flannel is used when the ha-cluster add-on is disabled
-      # ref: https://microk8s.io/docs/change-cidr
+      # Reference: https://microk8s.io/docs/change-cidr
         cmd: microk8s disable ha-cluster --force
 
     - name: Wait for nodes to start
@@ -45,7 +45,8 @@
       changed_when: false
 
     - name: Add SAN of the load balancer
-      # inspired by: https://github.com/balchua/do-microk8s/blob/a323e27f6f8f294ddc40c7de188242317f488775/templates/add-node.sh
+      # Based on the do-microk8s project by its project authors
+      # Reference: https://github.com/balchua/do-microk8s/blob/a323e27f6f8f294ddc40c7de188242317f488775/templates/add-node.sh
       ansible.builtin.command:
         cmd: sed -i 's@#MOREIPS@IP.99 = {{ api_endpoint }}\n#MOREIPS\n@g' /var/snap/microk8s/current/certs/csr.conf.template
       when: csr_conf_template_content.stdout.find('IP.99') == -1 and groups['control_plane'] | length > 1

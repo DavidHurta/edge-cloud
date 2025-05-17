@@ -25,7 +25,9 @@ fetch_and_export () {
 }
 
 ########## PromQL queries for nodes ##########
-# Queries based on https://stackoverflow.com/a/55451854 and https://www.robustperception.io/understanding-machine-cpu-usage/
+# Queries based on the following resources:
+# https://stackoverflow.com/a/55451854 by Xetiras (https://stackoverflow.com/users/11231656/xetiras)
+# https://www.robustperception.io/understanding-machine-cpu-usage/
 
 # Memory used in percentages
 fetch_and_export 'nodes_memory' '100 * (1 - ((avg_over_time(node_memory_MemFree_bytes[10m]) + avg_over_time(node_memory_Cached_bytes[10m]) + avg_over_time(node_memory_Buffers_bytes[10m])) / avg_over_time(node_memory_MemTotal_bytes[10m])))'
@@ -34,7 +36,7 @@ fetch_and_export 'nodes_memory' '100 * (1 - ((avg_over_time(node_memory_MemFree_
 fetch_and_export 'nodes_cpu' '(1 - avg(irate(node_cpu_seconds_total{mode="idle"}[10m])) by (node)) * 100'
 
 ########## PromQL queries for containers ##########
-# Queries based on https://stackoverflow.com/a/71574509
+# Queries based on https://stackoverflow.com/a/71574509 by valyala (https://stackoverflow.com/users/274937/valyala)
 
 # Memory used in MB
 # container_memory_working_set_bytes = "Current working set of the container in bytes" (https://kubernetes.io/docs/reference/instrumentation/metrics/)

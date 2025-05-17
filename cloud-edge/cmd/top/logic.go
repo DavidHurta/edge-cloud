@@ -95,7 +95,7 @@ func run(o options) {
 				}
 			}
 
-			// Formatting inspired by https://github.com/kubernetes/kubectl/blob/master/pkg/metricsutil/metrics_printer.go
+			// Formatting inspired by https://github.com/kubernetes/kubectl/blob/master/pkg/metricsutil/metrics_printer.go by the Kubernetes Project Authors
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%dm\t%dMi\t%s\n", pod.Namespace, pod.Name, containerStatus.Name, status, cpu, memory, pod.Spec.NodeName)
 		}
 	}

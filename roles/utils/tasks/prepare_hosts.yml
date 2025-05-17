@@ -1,6 +1,7 @@
 ---
 - name: Forward IPv4 and let iptables see bridged traffic
-  # Copied from https://v1-29.docs.kubernetes.io/docs/setup/production-environment/container-runtimes/#forwarding-ipv4-and-letting-iptables-see-bridged-traffic
+  # Commands copied from the Kubernetes Documentation by the Kubernetes Project Authors
+  # https://v1-29.docs.kubernetes.io/docs/setup/production-environment/container-runtimes/#forwarding-ipv4-and-letting-iptables-see-bridged-traffic
   ansible.builtin.shell: |
     cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
     overlay

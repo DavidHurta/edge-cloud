@@ -150,6 +150,7 @@
         name: containerd.service
 
     # keadm installation
+    # Commands to install keadm based on the KubeEdge documentation by the KubeEdge Project Authors
     # Commands used per https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm
     - name: Download compressed keadm
       ansible.builtin.get_url:
@@ -177,7 +178,7 @@
         mode: preserve
 
     - name: Install EdgeCore and join the cluster
-      # https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm
+      # Reference: https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm
       ansible.builtin.shell: |
         keadm join \
         --cloudcore-ipport="{{ hostvars[groups['control_plane'][0]]['ipv4_address'] }}:10000" \
@@ -197,15 +198,17 @@
       delay: 5
 
     - name: Add filter labels to Kubernetes API services
-      # https://edgemesh.netlify.app/guide/#prerequisites
+      # EdgeMesh prerequisites
+      # Reference: https://edgemesh.netlify.app/guide/#prerequisites
       delegate_to: localhost
       ansible.builtin.command: |
         kubectl label services kubernetes service.edgemesh.kubeedge.io/service-proxy-name="" --kubeconfig kubeconfig
       run_once: true
 
     - name: Configure EdgeCore to enable `kubectl logs`, DNS, and EdgeMesh
-      # https://release-1-19.docs.kubeedge.io/docs/setup/install-with-keadm#enable-kubectl-logs-feature
-      # https://edgemesh.netlify.app/guide/edge-kube-api.html#quick-start
+      # Reference:
+      # - https://release-1-19.docs.kubeedge.io/docs/setup/install-with-keadm#enable-kubectl-logs-feature
+      # - https://edgemesh.netlify.app/guide/edge-kube-api.html#quick-start
       ansible.builtin.shell: |
         yq -iy '.modules.edgeStream.enable = true' /etc/kubeedge/config/edgecore.yaml
         yq -iy '.modules.edgeMesh.enable = false' /etc/kubeedge/config/edgecore.yaml
@@ -223,6 +226,7 @@
         name: edgecore.service
 
     - name: Generate PSK
+      # Based on the EdgeMesh documentation
       # https://edgemesh.netlify.app/guide/security.html#generate-psk-cipher
       delegate_to: localhost
       register: generated_psk
