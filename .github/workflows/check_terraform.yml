@@ -8,6 +8,7 @@ name: Check and validate Terraform
 
 on:
   push:
+    branches: [ "master" ]
     paths:
       - "terraform/*"
 

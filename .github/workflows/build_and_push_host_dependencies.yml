@@ -8,6 +8,7 @@ name: Build and push the 'host-dependencies' image
 
 on:
   push:
+    branches: [ "master" ]
     paths:
       - "utils/host_dependencies/*"
       - "requirements.yaml"

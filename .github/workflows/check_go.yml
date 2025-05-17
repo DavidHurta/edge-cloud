@@ -8,6 +8,7 @@ name: Check Go syntax and compilation
 
 on:
   push:
+    branches: [ "master" ]
     paths:
       - "cloud-edge/*"
 
