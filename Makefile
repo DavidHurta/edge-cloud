@@ -19,6 +19,9 @@ verify: format
 
 # Targets to help quickly provision and configure default clusters.
 
+provision:
+	@terraform -chdir=terraform/ apply -var "do_token=${DO_PAT}"
+
 auto-provision:
 	@terraform -chdir=terraform/ apply -auto-approve -var "do_token=${DO_PAT}"
 
