@@ -57,8 +57,6 @@ $ make k3s-setup
 The following are notable used Ansible Groups.
 
 - `control_plane`: Control plane nodes. Control plane components and the Kubernetes metrics server is deployed.
-  > [!NOTE]  
-  > High availability is not supported for all the technologies. Thus, at maximum, one host is supported.
 - `infra`: Labeled infrastructure nodes. Prometheus server and relevant technologies are deployed. The Prometheus server is available at `http://prometheus-server.prometheus.svc` within the cluster.
 
   For example, to query the deployed Prometheus server within the cluster, run:
@@ -70,6 +68,9 @@ The following are notable used Ansible Groups.
 - `cloud`: Labeled cloud nodes intended for workload.
 - `edge`: Labeled edge nodes intended for workload.
 - `worker`: A set of `cloud` and `edge` nodes.
+
+> [!NOTE]  
+> High availability is not supported for all the technologies. Thus, at maximum, one host is supported.
 
 ## Inventory File Structure Example
 
@@ -93,8 +94,15 @@ $ ansible-inventory --graph
   |  |  |--165.227.138.3
 ```
 
-```json
+The inventory can be viewed in more detail by running:
+
+```sh
 $ ansible-inventory --list
+```
+
+Output:
+
+```json
 {
     "_meta": {
         "hostvars": {
