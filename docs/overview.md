@@ -26,9 +26,11 @@
   - `ansible-galaxy collection install --requirements-file requirements.yaml`
 
 > [!TIP]
-> A [Dockerfile](../utils/host_dependencies/Dockerfile) exists, which contains all the needed dependencies and the required steps!
+> A [Dockerfile](../utils/host_dependencies/Dockerfile) exists for end-to-end testing, which contains all the needed dependencies and the required steps!
 >
-> When using a container to execute the project, specify the Ansible collections path:
+> Note that the file does not clone the repository, thus, the repository needs to be cloned separately.
+>
+> When executing the project using a container built from the Dockerfile, specify the Ansible collections path:
 >
 > ```sh
 > ANSIBLE_COLLECTIONS_PATH=/collections/ ansible-playbook ...
