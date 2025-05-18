@@ -1,3 +1,9 @@
+#
+# Logic to check whether a node is connect to a cluster.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Check whether a node is connected to the cluster
   delegate_to: localhost

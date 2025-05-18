@@ -1,3 +1,9 @@
+#
+# A setup of cloud nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Label cloud nodes
   delegate_to: localhost

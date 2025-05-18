@@ -1,3 +1,9 @@
+#
+# Addition of nodes to form a K8s cluster.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Join nodes to the cluster
   ansible.builtin.command:

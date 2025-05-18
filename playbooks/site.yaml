@@ -1,3 +1,9 @@
+#
+# Ansible playbook to update and restart hosts.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Upgrade, Reboot, and Wait
 

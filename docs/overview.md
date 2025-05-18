@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the overview of the project.
+#
+# Author: David Hurta
+#
+-->
+
 # Project Overview
 
 ## Notes

@@ -1,3 +1,9 @@
+#
+# A setup of edge nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Label edge nodes
   delegate_to: localhost

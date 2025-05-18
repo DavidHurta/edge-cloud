@@ -1,3 +1,9 @@
+#
+# A configuration file for the ansible-lint tool.
+#
+# Author: David Hurta
+#
+
 # Package managers should install software in a controlled, safe manner.
 # https://ansible.readthedocs.io/projects/lint/rules/package-latest/#package-latest
 #

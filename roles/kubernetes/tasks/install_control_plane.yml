@@ -1,3 +1,9 @@
+#
+# Installation of the initial K8s control-plane node.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Create the init node
   register: add_node_output

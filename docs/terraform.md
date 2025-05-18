@@ -1,3 +1,10 @@
+<!-- 
+#
+# Documentation for the Terraform project.
+#
+# Author: David Hurta
+#
+-->
 
 # Terraform Project
 

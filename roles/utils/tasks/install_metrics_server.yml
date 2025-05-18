@@ -1,3 +1,9 @@
+#
+# Installation of the Kubernetes metrics server.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Add Kubernetes Metrics Server helm repository
   delegate_to: localhost

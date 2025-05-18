@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the comparison application.
+#
+# Author: David Hurta
+#
+-->
+
 # Visualizing Metrics Comparisons Across Technologies
 
 A Prometheus server gathers metrics, and GitHub Actions exports a subset of the metrics to a MySQL database.

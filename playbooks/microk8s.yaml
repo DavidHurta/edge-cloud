@@ -1,3 +1,9 @@
+#
+# A high-level Ansible playbook to form a MicroK8s cluster.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Startup configuration
   import_playbook: startup.yaml

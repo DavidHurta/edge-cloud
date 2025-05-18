@@ -1,3 +1,9 @@
+#
+# Installation of the CNI plugin Flannel.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Install Flannel
   ansible.builtin.shell: |

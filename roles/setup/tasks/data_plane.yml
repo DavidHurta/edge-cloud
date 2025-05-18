@@ -1,3 +1,9 @@
+#
+# A setup of data plane nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Label worker nodes
   # --k3s-extra-args '--node-label node-role.kubernetes.io/worker=worker' cannot be used

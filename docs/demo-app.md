@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the deployment of the demonstration application.
+#
+# Author: David Hurta
+#
+-->
+
 # Deployment of the Demonstration Kafka Application
 
 The [demonstration Kafka application](https://github.com/DavidHurta/demo-edge-cloud-app)

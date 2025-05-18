@@ -1,3 +1,9 @@
+#
+# A common logic to prepare hosts.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Forward IPv4 and let iptables see bridged traffic
   # Commands copied from the Kubernetes Documentation by the Kubernetes Project Authors

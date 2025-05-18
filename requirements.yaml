@@ -1,3 +1,9 @@
+#
+# A requirements file of dependencies for Ansible.
+#
+# Author: David Hurta
+#
+
 ---
 collections:
   - name: cloud.terraform

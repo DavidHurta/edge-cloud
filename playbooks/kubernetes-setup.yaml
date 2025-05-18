@@ -1,3 +1,9 @@
+#
+# Ansible playbook to form a Kubernetes cluster.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Install Kubernetes on hosts
   hosts: all

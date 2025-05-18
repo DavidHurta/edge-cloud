@@ -1,3 +1,10 @@
+#
+# A Dockerfile of main dependencies for the overall project.
+# Used for end-to-end testing by a project's GitHub Actions workflow.
+# 
+# Author: David Hurta
+#
+
 FROM ubuntu:24.04
 WORKDIR /install-dependencies
 COPY requirements.yaml ./

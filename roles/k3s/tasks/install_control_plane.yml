@@ -1,3 +1,9 @@
+#
+# Installation of K3s on control-plane nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Install K3s on the initial control plane node
   delegate_to: localhost

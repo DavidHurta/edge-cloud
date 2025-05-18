@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the Ansible project.
+#
+# Author: David Hurta
+#
+-->
+
 # Ansible Project
 
 The Ansible project enables to install the explored technologies on specified hosts.

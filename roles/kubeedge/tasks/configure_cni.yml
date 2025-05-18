@@ -1,3 +1,9 @@
+#
+# Configuration of a CNI plugin for KubeEdge.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Configure reference CNI plugins per KubeEdge documentation
   #  Shell commands copied from the KubeEdge documentation by the KubeEdge Project Authors

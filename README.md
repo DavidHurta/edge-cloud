@@ -1,3 +1,11 @@
+<!-- 
+#
+# The README file of the project.
+#
+# Author: David Hurta
+#
+-->
+
 # Exploring the Cloud Edge World
 
 ## Documentation

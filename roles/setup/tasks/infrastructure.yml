@@ -1,3 +1,9 @@
+#
+# A setup of infrastructure nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Label infra nodes
   # --k3s-extra-args '--node-label node-role.kubernetes.io/worker=worker' cannot be used

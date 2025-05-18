@@ -1,3 +1,9 @@
+#
+# Installation of the CNI reference plugins.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Install reference CNI plugins
   # Based on the containerd documentation by the containerd project authors

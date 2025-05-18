@@ -1,3 +1,9 @@
+#
+# A pre-installation Ansible playbook.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Wait until all hosts are reachable
   hosts: all

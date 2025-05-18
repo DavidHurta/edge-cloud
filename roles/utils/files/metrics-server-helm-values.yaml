@@ -1,3 +1,9 @@
+#
+# A helm values file for a Kubernetes metrics server.
+#
+# Author: David Hurta
+#
+
 nodeSelector:
   node-role.kubernetes.io/control-plane: ""
 tolerations:

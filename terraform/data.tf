@@ -1,3 +1,9 @@
+#
+# Terraform data.
+#
+# Author: David Hurta
+#
+
 data "digitalocean_ssh_key" "personal" {
   name = "personal"
 }

@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the CLI application.
+#
+# Author: David Hurta
+#
+-->
+
 # CLI Application for Deployment and Monitoring of Services
 
 A CLI application to deploy and monitor services using the Kubernetes API server.

@@ -1,3 +1,9 @@
+#
+# A Makefile to simplify the usage of the project.
+#
+# Author: David Hurta
+#
+
 .PHONY: build
 build:
 	mkdir -p bin

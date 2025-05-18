@@ -1,3 +1,9 @@
+#
+# A helm values file for a Prometheus server.
+#
+# Author: David Hurta
+#
+
 server:
   nodeSelector:
     node-role.kubernetes.io/infra: ""

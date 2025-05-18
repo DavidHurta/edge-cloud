@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation.
+#
+# Author: David Hurta
+#
+-->
+
 # Documentation
 
 ## Table of Contents

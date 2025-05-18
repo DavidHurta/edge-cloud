@@ -1,3 +1,11 @@
+<!-- 
+#
+# Documentation for the GitHub Action workflows used in the project.
+#
+# Author: David Hurta
+#
+-->
+
 # GitHub Actions
 
 ## Implemented Workflows

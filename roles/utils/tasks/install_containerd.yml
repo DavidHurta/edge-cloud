@@ -1,3 +1,9 @@
+#
+# Installation of the containerd container runtime.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Install containerd
   # Based on the containerd documentation by the containerd project authors

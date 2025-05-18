@@ -1,3 +1,9 @@
+#
+# Installation of the Prometheus server.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Add prometheus-community helm repository
   delegate_to: localhost

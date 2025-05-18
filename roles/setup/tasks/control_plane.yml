@@ -1,3 +1,9 @@
+#
+# A setup of control-plane nodes.
+#
+# Author: David Hurta
+#
+
 ---
 - name: Taint Kubernetes master nodes as node-role.kubernetes.io/control-plane:NoSchedule
   delegate_to: localhost
