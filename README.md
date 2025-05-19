@@ -8,9 +8,13 @@
 
 # Exploring the Cloud Edge World
 
+A project to explore edge cloud computing by provisioning and configuring resources to
+form Kubernetes, K3s, MicroK8s, and KubeEdge clusters. Tools to deploy and monitor
+services are also present, in addition to tools to compare the technologies.
+
 ## Documentation
 
-To view the full documentation, including required dependencies, click [`here`](docs/README.md).
+To view the full documentation, including required dependencies, click [here](docs/README.md).
 
 ## Notes
 
