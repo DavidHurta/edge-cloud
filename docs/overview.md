@@ -47,7 +47,7 @@
 
 #### Used Versions in Development
 
-Tools used in development and their respective versions.
+Tools used in the development and their respective reported versions.
 
 |Tool|Version|
 |-|-|
