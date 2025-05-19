@@ -20,11 +20,11 @@
 
 - General tooling downloadable by running `apt install curl python3 python3-pip wget lsb-release jq`
 - [`terraform`](https://developer.hashicorp.com/terraform/install)
-- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) (1.29)
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 - [`k3sup`](https://github.com/alexellis/k3sup?tab=readme-ov-file#download-k3sup-tldr)
 - [`helm`](https://helm.sh/docs/intro/install/#from-apt-debianubuntu)
 - [`pipx`](https://pipx.pypa.io/stable/installation/#on-linux)
-- [`keadm`](https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm) (1.19)
+- [`keadm`](https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm)
 - [`go`](https://go.dev/doc/install)
 - [`pipenv`](https://github.com/pypa/pipenv)
 - [`docker`](https://docs.docker.com/engine/install/ubuntu/)
