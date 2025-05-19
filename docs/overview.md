@@ -27,6 +27,7 @@
 - [`keadm`](https://kubeedge.io/docs/setup/install-with-keadm/#install-keadm) (1.19)
 - [`go`](https://go.dev/doc/install)
 - [`pipenv`](https://github.com/pypa/pipenv)
+- [`docker`](https://docs.docker.com/engine/install/ubuntu/)
 - MySQL client by running `apt install default-mysql-client`
 - Ansible and its required dependencies
   - `pipx install --include-deps ansible==11.1.0`
@@ -34,7 +35,7 @@
   - `ansible-galaxy collection install --requirements-file requirements.yaml`
 
 > [!TIP]
-> A [Dockerfile](../utils/host_dependencies/Dockerfile) exists for end-to-end testing, which contains all the needed dependencies and the required steps!
+> A [Dockerfile](../utils/host_dependencies/Dockerfile) exists for end-to-end testing, which contains the majority of the needed dependencies and the required steps!
 >
 > Note that the file does not clone the repository, thus, the repository needs to be cloned separately.
 >
@@ -65,6 +66,7 @@ Tools used in development and their respective versions.
 |wget|1.21.4|
 |jq|jq-1.7|
 |lsb-release|12.0-2|
+|docker|28.0.4|
 
 Tools downloaded by the `pipx` tool:
 
