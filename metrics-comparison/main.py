@@ -124,16 +124,13 @@ def custom_styler(styler: Styler, cmap: Colormap, caption: str) -> Styler:
     return styler
 
 
-def generate_summaries(connection: sqlalchemy.Engine, directory: str):
-    """generate_summaries generates HTML summaries.
+def generate_summaries_statistical_measurements(dataframe: pandas.DataFrame, directory: str):
+    """generate_summaries_statistical_measurements generates HTML summaries of statistical measurements.
 
     Args:
-        connection (sqlalchemy.Engine): Connection instance to the MySQL database.
-        directory (str): Desired directory for the generate_summaries.
+        dataframe (pandas.DataFrame): The data of the metrics.
+        directory (str): Desired directory for the reports.
     """
-    query = f"SELECT * FROM {TABLE}"
-
-    dataframe = pandas.read_sql(query, con=connection)
     groupby = dataframe.groupby(['Technology', "Source", "MetricType"])['Value']
     medians = groupby.median()
     std = groupby.std()  # Standard Variance
@@ -262,6 +259,108 @@ def generate_summaries(connection: sqlalchemy.Engine, directory: str):
                 file.write("<br>")  # Add a new line to separate better the written tables
 
 
+def generate_statistical_reports(dataframe: pandas.DataFrame, directory: str):
+    """generate_statistical_reports executes statistical tests to generate reports
+        using box plots and p-values of corresponding comparison tests.
+
+    Args:
+        dataframe (pandas.DataFrame): The data of the metrics.
+        directory (str): Desired directory for the reports.
+    """
+    for source in NODE_NAMES + CONTAINERS_NAMES:
+        for i, metric_type in enumerate(TYPE_ALL):
+            if (metric_type in [TYPE_NODES_CPU, TYPE_NODES_MEMORY] and source in CONTAINERS_NAMES) or \
+               (metric_type in [TYPE_CONTAINERS_CPU, TYPE_CONTAINERS_MEMORY] and source in NODE_NAMES):
+                continue
+            df = dataframe.loc[dataframe['MetricType'] == metric_type]
+            x_orig = df.loc[df['Source'].isin([source])]
+            x = x_orig.groupby(["Technology", "Source"])["Value"]
+
+            print(f"**************** {metric_type}-{source} ****************")
+
+            # Calculate Kruskal-Wallis H-test
+            groups = [group.values for _, group in x]
+
+            is_data_normal = True
+            for group in groups:
+                h_value, p_value = scipy.stats.shapiro(group)
+                print(f"SHAPIRO={h_value:.3f}, p={p_value:.3f}")
+                if p_value > 0.05:
+                    print(f"Group {i}: Data looks normal.")
+                else:
+                    is_data_normal = False
+                    print(f"Group {i}: Data does NOT look normal.")
+
+            is_equal_variance = True
+            h_value, p_value = scipy.stats.levene(*groups)
+            print(f"LEVENE={h_value:.3f}, p={p_value:.3f}")
+            if p_value > 0.05:
+                print(f"Group {i}: Data do have equal variance.")
+            else:
+                is_equal_variance = False
+                print(f"Group {i}: Data do NOT have equal variance.")
+
+            title_suffix = ""
+            if is_data_normal and is_equal_variance:
+                h_value, p_value = scipy.stats.f_oneway(*groups)
+                print(f"H={h_value:.3f}, p={p_value:.3f}")
+                title_suffix = "One-way ANOVA"
+            else:
+                h_value, p_value = scipy.stats.kruskal(*groups)
+                title_suffix = "Kruskal-Wallis"
+                print(f"H={h_value:.3f}, p={p_value:.3f}")
+
+            # Check for significance
+            skip_posthoc = False
+            if p_value > 0.05:
+                print("No significant difference - skipping posthoc tests")
+                title_suffix = f"No Significant Difference Among the Groups — {title_suffix}"
+                skip_posthoc = True
+
+            # Calculate Post Hoc test
+            if skip_posthoc:
+                seaborn.set_theme(rc={'axes.facecolor': seaborn.xkcd_rgb['light rose'], 'figure.facecolor': seaborn.xkcd_rgb['light rose']})
+                ax = seaborn.boxplot(data=x_orig, x="Technology", y="Value", order=ORDER_OF_TECHNOLOGIES)
+            else:
+                seaborn.set_theme()
+
+                if is_data_normal and is_equal_variance:
+                    posthoc = scikit_posthocs.posthoc_tukey_hsd(x_orig, val_col='Value', group_col='Technology')
+                    title_suffix += " + Tukey HSD"
+                    print(posthoc)
+                else:
+                    posthoc = scikit_posthocs.posthoc_dunn(x_orig, val_col='Value', group_col='Technology', p_adjust='bonferroni')
+                    title_suffix += " + Dunn"
+                    print(posthoc)
+
+                # Extract pairs and p-values of the pairs for the statannotations.annotator
+                # Based on https://blog.4dcu.be/programming/2021/12/30/Posthoc-Statannotations.html by Sebastian Proost
+                remove = numpy.tril(numpy.ones(posthoc.shape), k=0).astype("bool")
+                posthoc[remove] = numpy.nan
+                posthoc_molten = posthoc.melt(ignore_index=False).reset_index().dropna()
+                pairs = [(i[1]["index"], i[1]["variable"]) for i in posthoc_molten.iterrows()]
+                p_values = [i[1]["value"] for i in posthoc_molten.iterrows()]
+
+                # Generate box plot graph
+                ax = seaborn.boxplot(data=x_orig, x="Technology", y="Value", order=ORDER_OF_TECHNOLOGIES)
+
+                # Annotate p-values
+                annotator = Annotator(
+                    ax, pairs, data=df, x="Technology", y="Value", order=ORDER_OF_TECHNOLOGIES
+                )
+                annotator.configure(text_format="simple", loc="inside", hide_non_significant=True)
+                annotator.set_pvalues_and_annotate(p_values)
+
+            # Annotate figure
+            annot = ANNOTATIONS[metric_type]
+            plt.title(f"{annot['title']} — {source}\n({title_suffix})")
+            plt.xlabel(annot['x'])
+            plt.ylabel(annot['y'])
+            plt.tight_layout()
+            plt.savefig(f"{directory}/statistics-{annot['filename']}-{source}.pdf")
+            plt.close()
+
+
 def generate_reports(connection: sqlalchemy.Engine, directory: str):
     """
     generate_reports generates reports from a MySQL database data into a directory.
@@ -331,7 +430,11 @@ def main():
         sys.exit(1)
 
     generate_reports(connection, directory)
-    generate_summaries(connection, directory)
+
+    query = f"SELECT * FROM {TABLE}"
+    dataframe = pandas.read_sql(query, con=connection)
+    generate_statistical_reports(dataframe, directory)
+    generate_summaries_statistical_measurements(dataframe, directory)
 
 
 if __name__ == "__main__":
