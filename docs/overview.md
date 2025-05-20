@@ -34,6 +34,8 @@
   - `pipx inject ansible jmespath==1.0.1`
   - `ansible-galaxy collection install --requirements-file requirements.yaml`
 
+The relevant tools must be accessible via the `$PATH` environment variable.
+
 > [!TIP]
 > A [Dockerfile](../utils/host_dependencies/Dockerfile) exists for end-to-end testing, which contains the majority of the needed dependencies and the required steps!
 >
