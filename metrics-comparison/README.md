@@ -9,7 +9,7 @@
 # Visualizing Metrics Comparisons Across Technologies
 
 A Prometheus server gathers metrics, and GitHub Actions exports a subset of the metrics to a MySQL database.
-The goal of this application is to to generate summaries of the collected metrics for comparison using
+The goal of this application is to to generate summaries of the collected metrics for a comparison using
 statistical measurements, tests, and data visualization. The generated reports are intended
 to be merged using third party tools such as [`pdfjam`](https://github.com/pdfjam/pdfjam).
 
@@ -47,4 +47,4 @@ to be merged using third party tools such as [`pdfjam`](https://github.com/pdfja
    $ python main.py
    ```
 
-5. View reports, which were generated in a `_output` subdirectory.
+5. View reports, which were generated in the `_output` subdirectory.
